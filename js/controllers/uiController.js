@@ -352,8 +352,8 @@ class UIController {
             // Also update the thought history panel
             this.updateThoughtHistory();
             
-            // Add full conversation to active emotion's conversation history
-            if (activeEmotionId) {
+            // Add full conversation to active emotion's conversation history as a system message
+            if (activeEmotionId && stimulusDetails.emotions.includes(activeEmotionId)) {
                 const notificationElement = document.createElement('div');
                 notificationElement.className = 'message system-message';
                 notificationElement.innerHTML = formattedConversation;
@@ -397,25 +397,30 @@ class UIController {
         const thoughtHistoryPanel = document.getElementById('thought-history-panel');
         if (!thoughtHistoryPanel) return;
         
+        // Get all thoughts from all emotions
+        const thoughtsFromEmotions = [];
         const emotions = this.brainController.brain.getAllEmotions();
-        let allThoughts = [];
         
-        // Collect thoughts from all emotions
-        for (const emotionId in emotions) {
-            const thoughtHistory = emotions[emotionId].getThoughtHistory();
-            allThoughts = [...allThoughts, ...thoughtHistory];
+        for (const id in emotions) {
+            const emotion = emotions[id];
+            const thoughts = emotion.getThoughtHistory ? emotion.getThoughtHistory() : [];
+            thoughtsFromEmotions.push(...thoughts);
         }
         
         // Sort by timestamp (newest first)
-        allThoughts.sort((a, b) => b.timestamp - a.timestamp);
+        thoughtsFromEmotions.sort((a, b) => b.timestamp - a.timestamp);
         
         // Remove duplicates (same conversation appearing in multiple emotions)
         const uniqueThoughts = [];
         const seenIds = new Set();
         
-        allThoughts.forEach(thought => {
+        thoughtsFromEmotions.forEach(thought => {
+            if (!thought) return; // Skip undefined thoughts
+            
             // Create a unique ID for the thought based on content and time
-            const thoughtId = thought.timestamp.getTime() + thought.content.substring(0, 20);
+            const thoughtId = thought.timestamp.getTime() + 
+                (thought.content ? thought.content.substring(0, 20) : '');
+            
             if (!seenIds.has(thoughtId)) {
                 seenIds.add(thoughtId);
                 uniqueThoughts.push(thought);
@@ -455,23 +460,29 @@ class UIController {
             const body = document.createElement('div');
             body.className = 'thought-body';
             
-            if (thought.type === 'conversation') {
+            if (thought.type === 'conversation' && thought.content) {
                 // Format the conversation with colored names
                 let formattedContent = thought.content;
-                thought.participants.forEach(id => {
-                    const emotion = emotions[id];
-                    const regex = new RegExp(`${emotion.name}:`, 'g');
-                    formattedContent = formattedContent.replace(
-                        regex, 
-                        `<span style="color:${emotion.color};font-weight:bold;">${emotion.name}:</span>`
-                    );
-                });
+                if (thought.participants) {
+                    thought.participants.forEach(id => {
+                        const emotion = emotions[id];
+                        if (emotion) {
+                            const regex = new RegExp(`${emotion.name}:`, 'g');
+                            formattedContent = formattedContent.replace(
+                                regex, 
+                                `<span style="color:${emotion.color};font-weight:bold;">${emotion.name}:</span>`
+                            );
+                        }
+                    });
+                }
                 
                 // Convert newlines to HTML breaks
                 formattedContent = formattedContent.replace(/\n/g, '<br>');
                 body.innerHTML = formattedContent;
-            } else {
+            } else if (thought.content) {
                 body.textContent = thought.content;
+            } else {
+                body.textContent = "No content available";
             }
             
             thoughtElement.appendChild(header);

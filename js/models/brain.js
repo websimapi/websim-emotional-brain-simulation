@@ -268,24 +268,22 @@ class Brain {
             // Add this conversation to thought history for each emotion involved
             const timestamp = new Date();
             emotionIds.forEach(id => {
+                // Initialize thoughtHistory array if it doesn't exist
                 if (!this.emotions[id].thoughtHistory) {
                     this.emotions[id].thoughtHistory = [];
                 }
                 
-                this.emotions[id].thoughtHistory.unshift({
+                this.emotions[id].addThought({
                     type: 'conversation',
                     participants: emotionIds,
                     content: completion.content,
                     timestamp
                 });
-                
-                // Limit thought history size
-                if (this.emotions[id].thoughtHistory.length > 10) {
-                    this.emotions[id].thoughtHistory.pop();
-                }
             });
         } catch (error) {
             console.error("Error generating emotion conversation:", error);
+            // Add fallback conversation when LLM fails
+            stimulationDetails.conversation = `Error: Couldn't generate conversation between ${emotionNames.join(', ')}`;
         }
     }
 
