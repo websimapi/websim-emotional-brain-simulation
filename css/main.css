@@ -1,0 +1,259 @@
+/* Base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Brain visualization styles */
+.brain-container {
+    display: flex;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.brain-visualization {
+    flex: 1;
+    min-height: 400px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.brain-region {
+    transition: opacity 0.3s, filter 0.3s;
+    cursor: pointer;
+}
+
+.brain-region:hover {
+    opacity: 0.8;
+    filter: saturate(1.5);
+}
+
+.brain-region.active {
+    opacity: 1;
+    filter: saturate(2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+/* Player status styles */
+.player-status {
+    flex: 0 0 300px;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-left: 1px solid #eee;
+}
+
+.player-status h2 {
+    margin-bottom: 20px;
+    color: #444;
+    text-align: center;
+}
+
+.status-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.status-item label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #666;
+}
+
+.mood-indicator, .dominant-emotion {
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    background-color: #eee;
+    transition: all 0.3s;
+}
+
+/* Emotion panel styles */
+.emotion-panel {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.emotion-panel h2 {
+    padding: 20px;
+    margin: 0;
+    background-color: #444;
+    color: white;
+    text-align: center;
+}
+
+.emotion-tabs {
+    display: flex;
+    background-color: #f1f1f1;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.tab-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-btn.active {
+    background-color: white;
+    border-bottom: 3px solid #444;
+}
+
+/* Emotion color styling */
+.tab-btn[data-emotion="zeal"] {
+    color: #FFD700;
+    border-top: 3px solid #FFD700;
+}
+
+.tab-btn[data-emotion="gloom"] {
+    color: #0000CD;
+    border-top: 3px solid #0000CD;
+}
+
+.tab-btn[data-emotion="wrath"] {
+    color: #DC143C;
+    border-top: 3px solid #DC143C;
+}
+
+.tab-btn[data-emotion="skeptic"] {
+    color: #32CD32;
+    border-top: 3px solid #32CD32;
+}
+
+.tab-btn[data-emotion="jitters"] {
+    color: #8A2BE2;
+    border-top: 3px solid #8A2BE2;
+}
+
+.emotion-content {
+    padding: 20px;
+}
+
+.conversation-display {
+    height: 300px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow-y: auto;
+    background-color: #fafafa;
+}
+
+.input-area {
+    display: flex;
+    gap: 10px;
+}
+
+#emotion-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#send-btn {
+    padding: 10px 20px;
+    background-color: #444;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#send-btn:hover {
+    background-color: #333;
+}
+
+/* Message styling */
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.user-message {
+    background-color: #e1f5fe;
+    margin-left: auto;
+    border-bottom-right-radius: 0;
+}
+
+.emotion-message {
+    border-bottom-left-radius: 0;
+}
+
+.zeal-message {
+    background-color: rgba(255, 215, 0, 0.2);
+    border-left: 3px solid #FFD700;
+}
+
+.gloom-message {
+    background-color: rgba(0, 0, 205, 0.1);
+    border-left: 3px solid #0000CD;
+}
+
+.wrath-message {
+    background-color: rgba(220, 20, 60, 0.1);
+    border-left: 3px solid #DC143C;
+}
+
+.skeptic-message {
+    background-color: rgba(50, 205, 50, 0.1);
+    border-left: 3px solid #32CD32;
+}
+
+.jitters-message {
+    background-color: rgba(138, 43, 226, 0.1);
+    border-left: 3px solid #8A2BE2;
+}
+
+/* Animation for brain regions */
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+.brain-region.pulsing {
+    animation: pulse 2s infinite;
+}
+
