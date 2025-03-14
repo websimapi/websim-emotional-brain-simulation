@@ -96,6 +96,43 @@ class BrainController {
     }
 
     /**
+     * Get thought history for all emotions or a specific emotion
+     * @param {string} emotionId - Optional ID of specific emotion
+     * @returns {Array} Thought history
+     */
+    getThoughtHistory(emotionId = null) {
+        if (emotionId) {
+            const emotion = this.brain.getEmotion(emotionId);
+            return emotion ? emotion.getThoughtHistory() : [];
+        } else {
+            // Get combined thought history from all emotions
+            let allThoughts = [];
+            const emotions = this.brain.getAllEmotions();
+            
+            for (const id in emotions) {
+                allThoughts = [...allThoughts, ...emotions[id].getThoughtHistory()];
+            }
+            
+            // Sort by timestamp (newest first)
+            allThoughts.sort((a, b) => b.timestamp - a.timestamp);
+            
+            // Remove duplicates
+            const uniqueThoughts = [];
+            const seenIds = new Set();
+            
+            allThoughts.forEach(thought => {
+                const thoughtId = thought.timestamp.getTime() + thought.content.substring(0, 20);
+                if (!seenIds.has(thoughtId)) {
+                    seenIds.add(thoughtId);
+                    uniqueThoughts.push(thought);
+                }
+            });
+            
+            return uniqueThoughts;
+        }
+    }
+
+    /**
      * Reset the brain to baseline state
      */
     resetBrain() {
@@ -121,4 +158,3 @@ class BrainController {
         document.dispatchEvent(event);
     }
 }
-

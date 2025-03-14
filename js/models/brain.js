@@ -176,7 +176,8 @@ class Brain {
         const emotionsToStimulate = this.selectRandomEmotionsToStimulate();
         const stimulationDetails = {
             emotions: emotionsToStimulate,
-            interactions: []
+            interactions: [],
+            conversation: null
         };
         
         // If only one emotion is stimulated, it affects itself
@@ -216,9 +217,76 @@ class Brain {
                     }
                 }
             }
+            
+            // Generate an internal conversation between emotions
+            this.generateInternalConversation(stimulationDetails);
         }
         
         return stimulationDetails;
+    }
+
+    /**
+     * Generate an internal conversation between emotions
+     * @param {Object} stimulationDetails - Details about the stimulus
+     */
+    async generateInternalConversation(stimulationDetails) {
+        const emotionIds = stimulationDetails.emotions;
+        if (emotionIds.length < 2) return; // Need at least 2 emotions to have a conversation
+        
+        try {
+            // Get emotion names for conversation
+            const emotionNames = emotionIds.map(id => this.emotions[id].name);
+            
+            // Build a prompt for the LLM
+            const emotionLevels = {};
+            emotionIds.forEach(id => {
+                emotionLevels[this.emotions[id].name] = this.emotions[id].level;
+            });
+            
+            const conversationPrompt = `The following emotions in a person's brain are interacting: ${emotionNames.join(', ')}. 
+            Their current intensity levels (0-100) are: ${JSON.stringify(emotionLevels)}.
+            Generate a brief conversation (2-3 lines per emotion) between these emotions discussing how they feel about the current situation.
+            Each emotion should speak according to its personality and current intensity level.`;
+            
+            // Generate conversation with LLM
+            const completion = await websim.chat.completions.create({
+                messages: [
+                    {
+                        role: "system",
+                        content: "You generate short internal dialogues between emotions in a person's brain. Keep each emotion's dialogue brief (1-3 lines), distinct to their personality, and relevant to their current intensity."
+                    },
+                    {
+                        role: "user",
+                        content: conversationPrompt
+                    }
+                ]
+            });
+            
+            // Store the conversation in the stimulation details
+            stimulationDetails.conversation = completion.content;
+            
+            // Add this conversation to thought history for each emotion involved
+            const timestamp = new Date();
+            emotionIds.forEach(id => {
+                if (!this.emotions[id].thoughtHistory) {
+                    this.emotions[id].thoughtHistory = [];
+                }
+                
+                this.emotions[id].thoughtHistory.unshift({
+                    type: 'conversation',
+                    participants: emotionIds,
+                    content: completion.content,
+                    timestamp
+                });
+                
+                // Limit thought history size
+                if (this.emotions[id].thoughtHistory.length > 10) {
+                    this.emotions[id].thoughtHistory.pop();
+                }
+            });
+        } catch (error) {
+            console.error("Error generating emotion conversation:", error);
+        }
     }
 
     /**

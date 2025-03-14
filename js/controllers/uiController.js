@@ -300,40 +300,174 @@ class UIController {
     displayStimulusEffect(stimulusDetails) {
         const conversationDisplay = document.getElementById('conversation-display');
         const activeEmotionId = this.emotionController.getActiveEmotion()?.id;
+        const thoughtBubble = document.getElementById('thought-bubble');
+        const thoughtContent = document.getElementById('thought-content');
         
-        // Only show the stimulus notification if we're not in a conversation
-        if (!activeEmotionId) return;
-        
-        // Create a notification element
-        const notificationElement = document.createElement('div');
-        notificationElement.className = 'message system-message';
-        
-        // Build the notification message
-        let message = 'Internal thought process: ';
-        
-        if (stimulusDetails.emotions.length === 1) {
-            const emotionId = stimulusDetails.emotions[0];
-            const emotionName = this.brainController.brain.getEmotion(emotionId).name;
-            message += `${emotionName} is processing internally.`;
-        } else {
-            const emotionNames = stimulusDetails.emotions.map(id => 
-                this.brainController.brain.getEmotion(id).name
-            );
+        // Only show the stimulus notification if related to active emotion
+        if (activeEmotionId && stimulusDetails.emotions.includes(activeEmotionId)) {
+            // Create a notification element
+            const notificationElement = document.createElement('div');
+            notificationElement.className = 'message system-message';
             
-            if (emotionNames.length === 2) {
-                message += `${emotionNames[0]} and ${emotionNames[1]} are interacting.`;
+            // Build the notification message
+            let message = 'Internal thought process: ';
+            
+            if (stimulusDetails.emotions.length === 1) {
+                const emotionId = stimulusDetails.emotions[0];
+                const emotionName = this.brainController.brain.getEmotion(emotionId).name;
+                message += `${emotionName} is processing internally.`;
             } else {
-                const lastEmotion = emotionNames.pop();
-                message += `${emotionNames.join(', ')} and ${lastEmotion} are interacting.`;
+                const emotionNames = stimulusDetails.emotions.map(id => 
+                    this.brainController.brain.getEmotion(id).name
+                );
+                
+                if (emotionNames.length === 2) {
+                    message += `${emotionNames[0]} and ${emotionNames[1]} are interacting.`;
+                } else {
+                    const lastEmotion = emotionNames.pop();
+                    message += `${emotionNames.join(', ')} and ${lastEmotion} are interacting.`;
+                }
             }
-        }
-        
-        notificationElement.textContent = message;
-        
-        // Only add to the active emotion's conversation if it's part of the stimulus
-        if (stimulusDetails.emotions.includes(activeEmotionId)) {
+            
+            notificationElement.textContent = message;
             conversationDisplay.appendChild(notificationElement);
             conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
         }
+        
+        // Display the thought conversation in the thought bubble
+        if (stimulusDetails.conversation) {
+            // Show the thought bubble with conversation
+            thoughtBubble.style.display = 'block';
+            thoughtContent.innerHTML = '';
+            
+            // Format the conversation with emotion colors
+            const formattedConversation = this.formatEmotionConversation(stimulusDetails);
+            thoughtContent.innerHTML = formattedConversation;
+            
+            // Show the thought bubble for a limited time
+            setTimeout(() => {
+                thoughtBubble.style.display = 'none';
+            }, 10000); // Hide after 10 seconds
+            
+            // Also update the thought history panel
+            this.updateThoughtHistory();
+        }
+    }
+
+    /**
+     * Format an emotion conversation with colored text for each emotion
+     * @param {Object} stimulusDetails - Stimulus details with conversation
+     * @returns {string} HTML formatted conversation
+     */
+    formatEmotionConversation(stimulusDetails) {
+        if (!stimulusDetails.conversation) return '';
+        
+        let formattedText = stimulusDetails.conversation;
+        const emotions = this.brainController.brain.getAllEmotions();
+        
+        // Replace emotion names with colored versions
+        for (const emotionId of stimulusDetails.emotions) {
+            const emotion = emotions[emotionId];
+            const regex = new RegExp(`${emotion.name}:`, 'g');
+            formattedText = formattedText.replace(
+                regex, 
+                `<span style="color:${emotion.color};font-weight:bold;">${emotion.name}:</span>`
+            );
+        }
+        
+        // Convert newlines to HTML breaks
+        formattedText = formattedText.replace(/\n/g, '<br>');
+        
+        return formattedText;
+    }
+
+    /**
+     * Update the thought history panel
+     */
+    updateThoughtHistory() {
+        const thoughtHistoryPanel = document.getElementById('thought-history-panel');
+        if (!thoughtHistoryPanel) return;
+        
+        const emotions = this.brainController.brain.getAllEmotions();
+        let allThoughts = [];
+        
+        // Collect thoughts from all emotions
+        for (const emotionId in emotions) {
+            const thoughtHistory = emotions[emotionId].getThoughtHistory();
+            allThoughts = [...allThoughts, ...thoughtHistory];
+        }
+        
+        // Sort by timestamp (newest first)
+        allThoughts.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // Remove duplicates (same conversation appearing in multiple emotions)
+        const uniqueThoughts = [];
+        const seenIds = new Set();
+        
+        allThoughts.forEach(thought => {
+            // Create a unique ID for the thought based on content and time
+            const thoughtId = thought.timestamp.getTime() + thought.content.substring(0, 20);
+            if (!seenIds.has(thoughtId)) {
+                seenIds.add(thoughtId);
+                uniqueThoughts.push(thought);
+            }
+        });
+        
+        // Limit to most recent 10 thoughts
+        const recentThoughts = uniqueThoughts.slice(0, 10);
+        
+        // Clear current content
+        thoughtHistoryPanel.innerHTML = '';
+        
+        // Add thoughts to panel
+        recentThoughts.forEach(thought => {
+            const thoughtElement = document.createElement('div');
+            thoughtElement.className = 'thought-item';
+            
+            // Format timestamp
+            const formattedTime = thought.timestamp.toLocaleTimeString();
+            
+            // Create header with timestamp and participants
+            const header = document.createElement('div');
+            header.className = 'thought-header';
+            
+            if (thought.participants) {
+                const participantNames = thought.participants.map(id => 
+                    `<span style="color:${emotions[id].color}">${emotions[id].name}</span>`
+                ).join(', ');
+                
+                header.innerHTML = `<span class="thought-time">${formattedTime}</span> - 
+                                    <span class="thought-participants">${participantNames}</span>`;
+            } else {
+                header.innerHTML = `<span class="thought-time">${formattedTime}</span>`;
+            }
+            
+            // Create body with conversation content
+            const body = document.createElement('div');
+            body.className = 'thought-body';
+            
+            if (thought.type === 'conversation') {
+                // Format the conversation with colored names
+                let formattedContent = thought.content;
+                thought.participants.forEach(id => {
+                    const emotion = emotions[id];
+                    const regex = new RegExp(`${emotion.name}:`, 'g');
+                    formattedContent = formattedContent.replace(
+                        regex, 
+                        `<span style="color:${emotion.color};font-weight:bold;">${emotion.name}:</span>`
+                    );
+                });
+                
+                // Convert newlines to HTML breaks
+                formattedContent = formattedContent.replace(/\n/g, '<br>');
+                body.innerHTML = formattedContent;
+            } else {
+                body.textContent = thought.content;
+            }
+            
+            thoughtElement.appendChild(header);
+            thoughtElement.appendChild(body);
+            thoughtHistoryPanel.appendChild(thoughtElement);
+        });
     }
 }

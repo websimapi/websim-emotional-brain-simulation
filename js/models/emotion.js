@@ -16,6 +16,7 @@ class Emotion {
         this.personality = config.personality;
         this.signatureMove = config.signatureMove;
         this.conversationHistory = [];
+        this.thoughtHistory = [];
         this.isActive = false;
     }
 
@@ -97,6 +98,27 @@ class Emotion {
     }
 
     /**
+     * Get this emotion's thought history
+     * @returns {Array} Thought history
+     */
+    getThoughtHistory() {
+        return this.thoughtHistory;
+    }
+
+    /**
+     * Add a thought to this emotion's thought history
+     * @param {Object} thought - Thought object
+     */
+    addThought(thought) {
+        this.thoughtHistory.unshift(thought);
+        
+        // Limit history size
+        if (this.thoughtHistory.length > 10) {
+            this.thoughtHistory.pop();
+        }
+    }
+
+    /**
      * Set the active state of this emotion
      * @param {boolean} isActive - Whether this emotion is currently active (focused)
      */
@@ -104,4 +126,3 @@ class Emotion {
         this.isActive = isActive;
     }
 }
-

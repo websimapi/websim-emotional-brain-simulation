@@ -266,3 +266,82 @@ body {
 .brain-region.pulsing {
     animation: pulse 2s infinite;
 }
+
+/* Thought bubble styles */
+.thought-bubble {
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    max-width: 400px;
+    min-width: 200px;
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.thought-bubble:before {
+    content: '';
+    position: absolute;
+    right: 30px;
+    top: -20px;
+    border: 10px solid transparent;
+    border-bottom-color: white;
+}
+
+.thought-content {
+    line-height: 1.4;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Thought history panel */
+.thought-history {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+    overflow: hidden;
+}
+
+.thought-history h2 {
+    padding: 15px 20px;
+    margin: 0;
+    background-color: #444;
+    color: white;
+    text-align: center;
+}
+
+.thought-history-panel {
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.thought-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    border-left: 4px solid #ddd;
+}
+
+.thought-header {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.thought-time {
+    font-weight: bold;
+}
+
+.thought-body {
+    line-height: 1.4;
+}
