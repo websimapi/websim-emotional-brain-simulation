@@ -345,3 +345,33 @@ body {
 .thought-body {
     line-height: 1.4;
 }
+
+/* Cooldown indicator styles */
+.cooldown-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.cooldown-label {
+    font-size: 0.9em;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+}
+
+.cooldown-progress {
+    height: 6px;
+    background-color: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.cooldown-bar {
+    height: 100%;
+    width: 0%;
+    background-color: #444;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+}

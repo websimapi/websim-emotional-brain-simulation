@@ -67,6 +67,7 @@ class UIController {
             this.updateBrainVisualization(e.detail.emotionLevels);
             this.updatePlayerStatus(e.detail.mood, e.detail.dominantEmotion);
             this.updateThoughtHistory(); // Update thought history on every state update
+            this.updateCooldownProgress(e.detail.cooldownProgress); // Update cooldown progress
         });
         
         // Listen for active emotion changes
@@ -501,5 +502,25 @@ class UIController {
             thoughtElement.appendChild(body);
             thoughtHistoryPanel.appendChild(thoughtElement);
         });
+    }
+
+    /**
+     * Update the cooldown progress indicator
+     * @param {Object} cooldownData - Cooldown progress data
+     */
+    updateCooldownProgress(cooldownData) {
+        if (!cooldownData) return;
+        
+        const cooldownBar = document.getElementById('cooldown-bar');
+        const remainingTime = document.getElementById('cooldown-remaining');
+        
+        if (cooldownBar && remainingTime) {
+            // Update progress bar width
+            cooldownBar.style.width = `${cooldownData.progress * 100}%`;
+            
+            // Update remaining time text (in seconds, with one decimal place)
+            const seconds = (cooldownData.remaining / 1000).toFixed(1);
+            remainingTime.textContent = `${seconds}s`;
+        }
     }
 }

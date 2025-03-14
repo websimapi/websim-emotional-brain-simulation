@@ -12,6 +12,7 @@ class BrainController {
         this.player = player;
         this.simulationInterval = null;
         this.isRunning = false;
+        this.cooldownProgress = null;
     }
 
     /**
@@ -39,7 +40,7 @@ class BrainController {
     }
 
     /**
-     * Run a single tick of the simulation
+     * Process a single tick of the simulation
      */
     runSimulationTick() {
         // Update brain state
@@ -47,6 +48,9 @@ class BrainController {
         
         // Update player based on brain state
         this.player.update();
+        
+        // Update cooldown progress
+        this.updateCooldownProgress();
         
         // Trigger any UI updates
         this.dispatchUpdateEvent();
@@ -142,6 +146,23 @@ class BrainController {
     }
 
     /**
+     * Update the cooldown progress indicator
+     */
+    updateCooldownProgress() {
+        const currentTime = Date.now();
+        const elapsedTime = currentTime - this.brain.lastStimulusTime;
+        const progress = Math.min(elapsedTime / this.brain.nextStimulusDelay, 1);
+        
+        // Add to the event detail for UI update
+        this.cooldownProgress = {
+            elapsed: elapsedTime,
+            total: this.brain.nextStimulusDelay,
+            progress: progress,
+            remaining: Math.max(0, this.brain.nextStimulusDelay - elapsedTime)
+        };
+    }
+
+    /**
      * Dispatch a custom event when the brain state updates
      */
     dispatchUpdateEvent() {
@@ -151,7 +172,8 @@ class BrainController {
                 mood: this.player.getMood(),
                 dominantEmotion: this.player.getDominantEmotion(),
                 playerStats: this.player.getStats(),
-                playerThoughts: this.player.getThoughts()
+                playerThoughts: this.player.getThoughts(),
+                cooldownProgress: this.cooldownProgress
             }
         });
         
