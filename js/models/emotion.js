@@ -102,6 +102,10 @@ class Emotion {
      * @returns {Array} Thought history
      */
     getThoughtHistory() {
+        // Initialize thoughtHistory if it doesn't exist
+        if (!this.thoughtHistory) {
+            this.thoughtHistory = [];
+        }
         return this.thoughtHistory;
     }
 
@@ -110,6 +114,11 @@ class Emotion {
      * @param {Object} thought - Thought object
      */
     addThought(thought) {
+        // Initialize thoughtHistory if it doesn't exist
+        if (!this.thoughtHistory) {
+            this.thoughtHistory = [];
+        }
+        
         this.thoughtHistory.unshift(thought);
         
         // Limit history size

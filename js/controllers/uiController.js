@@ -66,6 +66,7 @@ class UIController {
         document.addEventListener('brainStateUpdated', (e) => {
             this.updateBrainVisualization(e.detail.emotionLevels);
             this.updatePlayerStatus(e.detail.mood, e.detail.dominantEmotion);
+            this.updateThoughtHistory(); // Update thought history on every state update
         });
         
         // Listen for active emotion changes
@@ -81,6 +82,12 @@ class UIController {
         // Listen for brain stimulation events
         document.addEventListener('brainStimulusOccurred', (e) => {
             this.displayStimulusEffect(e.detail);
+            this.updateThoughtHistory(); // Update thought history on stimulus
+        });
+        
+        // Listen specifically for thought history updates
+        document.addEventListener('thoughtHistoryUpdated', () => {
+            this.updateThoughtHistory();
         });
     }
 
@@ -403,8 +410,10 @@ class UIController {
         
         for (const id in emotions) {
             const emotion = emotions[id];
-            const thoughts = emotion.getThoughtHistory ? emotion.getThoughtHistory() : [];
-            thoughtsFromEmotions.push(...thoughts);
+            const thoughts = emotion.getThoughtHistory();
+            if (thoughts && thoughts.length > 0) {
+                thoughtsFromEmotions.push(...thoughts);
+            }
         }
         
         // Sort by timestamp (newest first)
@@ -445,10 +454,13 @@ class UIController {
             const header = document.createElement('div');
             header.className = 'thought-header';
             
-            if (thought.participants) {
-                const participantNames = thought.participants.map(id => 
-                    `<span style="color:${emotions[id].color}">${emotions[id].name}</span>`
-                ).join(', ');
+            if (thought.participants && thought.participants.length > 0) {
+                const participantNames = thought.participants.map(id => {
+                    const emotion = emotions[id];
+                    return emotion ? 
+                        `<span style="color:${emotion.color}">${emotion.name}</span>` : 
+                        id;
+                }).join(', ');
                 
                 header.innerHTML = `<span class="thought-time">${formattedTime}</span> - 
                                     <span class="thought-participants">${participantNames}</span>`;
@@ -463,18 +475,18 @@ class UIController {
             if (thought.type === 'conversation' && thought.content) {
                 // Format the conversation with colored names
                 let formattedContent = thought.content;
-                if (thought.participants) {
-                    thought.participants.forEach(id => {
-                        const emotion = emotions[id];
-                        if (emotion) {
-                            const regex = new RegExp(`${emotion.name}:`, 'g');
-                            formattedContent = formattedContent.replace(
-                                regex, 
-                                `<span style="color:${emotion.color};font-weight:bold;">${emotion.name}:</span>`
-                            );
-                        }
-                    });
-                }
+                
+                // Apply colors to emotion names
+                Object.keys(emotions).forEach(id => {
+                    const emotion = emotions[id];
+                    if (emotion) {
+                        const regex = new RegExp(`${emotion.name}:`, 'g');
+                        formattedContent = formattedContent.replace(
+                            regex, 
+                            `<span style="color:${emotion.color};font-weight:bold;">${emotion.name}:</span>`
+                        );
+                    }
+                });
                 
                 // Convert newlines to HTML breaks
                 formattedContent = formattedContent.replace(/\n/g, '<br>');

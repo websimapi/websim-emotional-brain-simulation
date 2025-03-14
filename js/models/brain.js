@@ -280,6 +280,17 @@ class Brain {
                     timestamp
                 });
             });
+            
+            // Dispatch a custom event for thought history updates
+            const event = new CustomEvent('thoughtHistoryUpdated', {
+                detail: {
+                    conversation: completion.content,
+                    participants: emotionIds,
+                    timestamp: timestamp
+                }
+            });
+            document.dispatchEvent(event);
+            
         } catch (error) {
             console.error("Error generating emotion conversation:", error);
             // Add fallback conversation when LLM fails
