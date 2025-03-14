@@ -217,6 +217,16 @@ body {
     border-bottom-right-radius: 0;
 }
 
+.system-message {
+    background-color: rgba(200, 200, 200, 0.3);
+    font-style: italic;
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px auto;
+    text-align: center;
+    max-width: 90%;
+}
+
 .emotion-message {
     border-bottom-left-radius: 0;
 }
@@ -256,4 +266,3 @@ body {
 .brain-region.pulsing {
     animation: pulse 2s infinite;
 }
-

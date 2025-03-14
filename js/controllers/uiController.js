@@ -77,6 +77,11 @@ class UIController {
         document.addEventListener('emotionMessageExchanged', (e) => {
             this.updateConversationDisplay(e.detail.emotionId);
         });
+        
+        // Listen for brain stimulation events
+        document.addEventListener('brainStimulusOccurred', (e) => {
+            this.displayStimulusEffect(e.detail);
+        });
     }
 
     /**
@@ -287,5 +292,48 @@ class UIController {
             }
         }
     }
-}
 
+    /**
+     * Display a notification about internal brain stimulus
+     * @param {Object} stimulusDetails - Details about the stimulus
+     */
+    displayStimulusEffect(stimulusDetails) {
+        const conversationDisplay = document.getElementById('conversation-display');
+        const activeEmotionId = this.emotionController.getActiveEmotion()?.id;
+        
+        // Only show the stimulus notification if we're not in a conversation
+        if (!activeEmotionId) return;
+        
+        // Create a notification element
+        const notificationElement = document.createElement('div');
+        notificationElement.className = 'message system-message';
+        
+        // Build the notification message
+        let message = 'Internal thought process: ';
+        
+        if (stimulusDetails.emotions.length === 1) {
+            const emotionId = stimulusDetails.emotions[0];
+            const emotionName = this.brainController.brain.getEmotion(emotionId).name;
+            message += `${emotionName} is processing internally.`;
+        } else {
+            const emotionNames = stimulusDetails.emotions.map(id => 
+                this.brainController.brain.getEmotion(id).name
+            );
+            
+            if (emotionNames.length === 2) {
+                message += `${emotionNames[0]} and ${emotionNames[1]} are interacting.`;
+            } else {
+                const lastEmotion = emotionNames.pop();
+                message += `${emotionNames.join(', ')} and ${lastEmotion} are interacting.`;
+            }
+        }
+        
+        notificationElement.textContent = message;
+        
+        // Only add to the active emotion's conversation if it's part of the stimulus
+        if (stimulusDetails.emotions.includes(activeEmotionId)) {
+            conversationDisplay.appendChild(notificationElement);
+            conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
+        }
+    }
+}

@@ -10,6 +10,8 @@ class Brain {
         this.initializeEmotions();
         this.tick = 0;
         this.activeEmotion = null;
+        this.lastStimulusTime = Date.now();
+        this.nextStimulusDelay = this.getRandomStimulusDelay();
     }
 
     /**
@@ -128,6 +130,119 @@ class Brain {
     }
 
     /**
+     * Get a random delay for the next stimulus (7-15 seconds)
+     * @returns {number} Delay in milliseconds
+     */
+    getRandomStimulusDelay() {
+        return (Math.random() * 8000) + 7000; // 7-15 seconds in milliseconds
+    }
+    
+    /**
+     * Select a random number of emotions to stimulate
+     * Weighted to favor fewer emotions (1-2 most common)
+     * @returns {Array} Array of emotion IDs to stimulate
+     */
+    selectRandomEmotionsToStimulate() {
+        // Get all emotion IDs
+        const emotionIds = Object.keys(this.emotions);
+        
+        // Determine how many emotions to stimulate
+        // Weighted probability: 1-2 emotions most common, 3+ increasingly rare
+        const weightedRandom = Math.random();
+        let numEmotionsToStimulate;
+        
+        if (weightedRandom < 0.45) {
+            numEmotionsToStimulate = 1;
+        } else if (weightedRandom < 0.75) {
+            numEmotionsToStimulate = 2;
+        } else if (weightedRandom < 0.90) {
+            numEmotionsToStimulate = 3;
+        } else if (weightedRandom < 0.97) {
+            numEmotionsToStimulate = 4;
+        } else {
+            numEmotionsToStimulate = 5;
+        }
+        
+        // Shuffle emotion IDs and take the number we need
+        const shuffled = [...emotionIds].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, numEmotionsToStimulate);
+    }
+    
+    /**
+     * Stimulate random emotions to interact
+     * @returns {Object} Details about the stimulation
+     */
+    stimulateEmotions() {
+        const emotionsToStimulate = this.selectRandomEmotionsToStimulate();
+        const stimulationDetails = {
+            emotions: emotionsToStimulate,
+            interactions: []
+        };
+        
+        // If only one emotion is stimulated, it affects itself
+        if (emotionsToStimulate.length === 1) {
+            const emotionId = emotionsToStimulate[0];
+            const emotion = this.emotions[emotionId];
+            const delta = (Math.random() * 10) - 5; // Random change between -5 and +5
+            emotion.adjustLevel(delta);
+            
+            stimulationDetails.interactions.push({
+                source: emotionId,
+                target: emotionId,
+                delta: delta
+            });
+        } else {
+            // Multiple emotions interact with each other
+            for (let i = 0; i < emotionsToStimulate.length; i++) {
+                const sourceId = emotionsToStimulate[i];
+                const sourceEmotion = this.emotions[sourceId];
+                
+                // Each emotion influences other emotions in the selection
+                for (let j = 0; j < emotionsToStimulate.length; j++) {
+                    if (i !== j) {
+                        const targetId = emotionsToStimulate[j];
+                        const targetEmotion = this.emotions[targetId];
+                        
+                        // Apply influence and record the interaction
+                        const influenceAmount = sourceEmotion.influence(targetEmotion);
+                        
+                        if (influenceAmount !== 0) {
+                            stimulationDetails.interactions.push({
+                                source: sourceId,
+                                target: targetId,
+                                delta: influenceAmount
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        return stimulationDetails;
+    }
+
+    /**
+     * Check if it's time for a stimulus and process it if needed
+     * @returns {Object|null} Stimulus details if processed, null otherwise
+     */
+    checkAndProcessStimulus() {
+        const currentTime = Date.now();
+        
+        if (currentTime - this.lastStimulusTime >= this.nextStimulusDelay) {
+            // Time for a stimulus
+            const stimulusDetails = this.stimulateEmotions();
+            
+            // Reset timer with a new random delay
+            this.lastStimulusTime = currentTime;
+            this.nextStimulusDelay = this.getRandomStimulusDelay();
+            
+            return stimulusDetails;
+        }
+        
+        return null;
+    }
+
+    /**
      * Process a simulation tick - update all emotions
      */
     processTick() {
@@ -136,6 +251,16 @@ class Brain {
         // Process each emotion's natural decay
         for (const emotion of Object.values(this.emotions)) {
             emotion.applyDecay();
+        }
+        
+        // Check for and process automatic stimulation
+        const stimulusDetails = this.checkAndProcessStimulus();
+        if (stimulusDetails) {
+            // Dispatch an event about the stimulus
+            const event = new CustomEvent('brainStimulusOccurred', {
+                detail: stimulusDetails
+            });
+            document.dispatchEvent(event);
         }
         
         // Process influence between emotions
@@ -156,4 +281,3 @@ class Brain {
         this.tick = 0;
     }
 }
-
