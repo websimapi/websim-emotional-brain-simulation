@@ -351,6 +351,15 @@ class UIController {
             
             // Also update the thought history panel
             this.updateThoughtHistory();
+            
+            // Add full conversation to active emotion's conversation history
+            if (activeEmotionId) {
+                const notificationElement = document.createElement('div');
+                notificationElement.className = 'message system-message';
+                notificationElement.innerHTML = formattedConversation;
+                conversationDisplay.appendChild(notificationElement);
+                conversationDisplay.scrollTop = conversationDisplay.scrollHeight;
+            }
         }
     }
 
